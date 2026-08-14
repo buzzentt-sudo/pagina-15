@@ -6,11 +6,36 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { mainNav, siteConfig } from "@/lib/site-config";
 import SearchBar from "./SearchBar";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const pathname = usePathname();
+  const supabase = createClient();
+  const [user, setUser] = useState<any>(null);
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+
+      if (user) {
+        const { data } = await supabase.rpc("get_my_role");
+        setRole(data);
+      }
+    }
+
+    loadAuth();
+
+    const { data: { subscription } } =
+      supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null);
+      });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Cierra el menú móvil y el buscador cada vez que cambia de página.
   useEffect(() => {
@@ -52,7 +77,9 @@ export default function Header() {
           aria-label="Navegación principal"
           className="hidden items-center gap-1 lg:flex"
         >
-          {mainNav.map((item) => (
+          {mainNav
+            .filter((item) => item.href !== "/login")
+            .map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -74,6 +101,24 @@ export default function Header() {
               />
             </Link>
           ))}
+
+          {!user && (
+            <Link href="/login" className="px-3 py-2 text-sm font-semibold">
+              Iniciar sesión
+            </Link>
+          )}
+
+          {user && role === "admin" && (
+            <Link href="/panel" className="px-3 py-2 text-sm font-semibold">
+              Panel de revisión
+            </Link>
+          )}
+
+          {user && (
+            <Link href="/nueva-noticia" className="px-3 py-2 text-sm font-semibold">
+              Nueva noticia
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-1.5 lg:gap-2">
