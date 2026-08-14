@@ -248,7 +248,86 @@ export default function PanelPage() {
             disabled={logoLoading || !logoFile}
             className="rounded-lg px-5 py-3 bg-black text-white font-semibold disabled:opacity-50"
           >
-  >
+            {logoLoading ? "Subiendo..." : "Cambiar logo"}
+          </button>
+
+          {logoSuccess && (
+            <p className="mt-4 text-green-600">
+              {logoSuccess}
+            </p>
+          )}
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-5">
+            Noticias
+          </h2>
+
+          {news.length === 0 ? (
+            <div className="border rounded-xl p-8 text-center">
+              <p>No hay noticias.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {news.map((item) => (
+                <article
+                  key={item.id}
+                  className="border rounded-xl p-5"
+                >
+                  <img
+                    src={item.image_url}
+                    alt={item.title}
+                    className="w-full max-h-80 object-cover rounded-lg mb-5"
+                  />
+
+                  <h2 className="text-2xl font-bold mb-2">
+                    {item.title}
+                  </h2>
+
+                  {item.excerpt && (
+                    <p className="text-gray-600 mb-4">
+                      {item.excerpt}
+                    </p>
+                  )}
+
+                  <p className="whitespace-pre-wrap">
+                    {item.content}
+                  </p>
+
+                  <p className="mt-3 text-sm text-gray-500">
+                    Estado: {item.status}
+                  </p>
+
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    {item.status === "pendiente" && (
+                      <>
+                        <button
+                          onClick={() =>
+                            updateNewsStatus(item.id, "aprobada")
+                          }
+                          disabled={actionLoading === item.id}
+                          className="rounded-lg px-4 py-2 bg-green-600 text-white font-semibold disabled:opacity-50"
+                        >
+                          Aprobar
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            updateNewsStatus(item.id, "rechazada")
+                          }
+                          disabled={actionLoading === item.id}
+                          className="rounded-lg px-4 py-2 bg-red-600 text-white font-semibold disabled:opacity-50"
+                        >
+                          Rechazar
+                        </button>
+                      </>
+                    )}
+
+                    <button
+                      onClick={() => deleteNews(item.id)}
+                      disabled={actionLoading === item.id}
+                      className="rounded-lg px-4 py-2 bg-gray-800 text-white font-semibold disabled:opacity-50"
+                    >
                       Eliminar
                     </button>
                   </div>
