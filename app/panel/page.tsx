@@ -34,6 +34,8 @@ export default function PanelPage() {
   const [authorized, setAuthorized] = useState(false)
   const [error, setError] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [rejectingId, setRejectingId] = useState<string | null>(null)
+  const [rejectionReason, setRejectionReason] = useState('')
   const [filter, setFilter] = useState<Filter>('todas')
 
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -114,7 +116,8 @@ export default function PanelPage() {
 
   async function updateNewsStatus(
     id: string,
-    status: 'aprobada' | 'rechazada'
+    status: 'aprobada' | 'rechazada',
+    reason?: string
   ) {
     setError('')
     setActionLoading(id)
@@ -123,6 +126,7 @@ export default function PanelPage() {
       .from('news')
       .update({
         status,
+        rejection_reason: status === 'rechazada' ? (reason?.trim() || null) : null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
@@ -141,6 +145,8 @@ export default function PanelPage() {
     )
 
     setActionLoading(null)
+    setRejectingId(null)
+    setRejectionReason('')
   }
 
   async function deleteNews(id: string) {
@@ -523,6 +529,60 @@ export default function PanelPage() {
                         {item.content}
                       </p>
 
+                      {rejectingId === item.id && (
+                        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                          <label className="block font-semibold text-red-800 mb-2">
+                            Motivo del rechazo
+                          </label>
+
+                          <textarea
+                            value={rejectionReason}
+                            onChange={(e) =>
+                              setRejectionReason(e.target.value)
+                            }
+                            rows={3}
+                            placeholder="Explicá brevemente por qué se rechaza la noticia..."
+                            className="w-full border rounded-lg px-4 py-3 bg-white"
+                          />
+
+                          <div className="flex flex-wrap gap-3 mt-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!rejectionReason.trim()) {
+                                  setError(
+                                    'Escribí un motivo antes de rechazar la noticia.'
+                                  )
+                                  return
+                                }
+
+                                updateNewsStatus(
+                                  item.id,
+                                  'rechazada',
+                                  rejectionReason
+                                )
+                              }}
+                              disabled={actionLoading === item.id}
+                              className="rounded-lg px-4 py-2 bg-red-600 text-white font-semibold disabled:opacity-50"
+                            >
+                              Confirmar rechazo
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRejectingId(null)
+                                setRejectionReason('')
+                              }}
+                              disabled={actionLoading === item.id}
+                              className="rounded-lg px-4 py-2 border font-semibold bg-white"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="mt-5 flex flex-wrap gap-3">
                         {item.status === 'pendiente' && (
                           <>
@@ -542,12 +602,11 @@ export default function PanelPage() {
                             </button>
 
                             <button
-                              onClick={() =>
-                                updateNewsStatus(
-                                  item.id,
-                                  'rechazada'
-                                )
-                              }
+                              onClick={() => {
+                                setRejectingId(item.id)
+                                setRejectionReason('')
+                                setError('')
+                              }}
                               disabled={
                                 actionLoading === item.id
                               }
