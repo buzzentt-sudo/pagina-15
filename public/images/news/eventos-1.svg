@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#573e17"/>
+      <stop offset="100%" stop-color="#b17f1c"/>
+    </linearGradient>
+    <pattern id="p" width="60" height="60" patternUnits="userSpaceOnUse">
+      <circle cx="30" cy="30" r="1.4" fill="#ffffff" opacity="0.10"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="675" fill="url(#g)"/>
+  <rect width="1200" height="675" fill="url(#p)"/>
+  <text x="60" y="600" font-family="system-ui, sans-serif" font-size="42" font-weight="700" fill="#ffffff" opacity="0.92">Eventos Especiales</text>
+  <text x="60" y="640" font-family="system-ui, sans-serif" font-size="20" fill="#ffffff" opacity="0.6">Escuela N.º 15 &quot;Claudio Lepratti&quot;</text>
+</svg>
