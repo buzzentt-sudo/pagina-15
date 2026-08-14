@@ -122,11 +122,22 @@ export default function PanelPage() {
     setError('')
     setActionLoading(id)
 
+    const currentNews = news.find((item) => item.id === id)
+
+    if (!currentNews) {
+      setError('No se encontró la noticia.')
+      setActionLoading(null)
+      return
+    }
+
+    const cleanReason = reason?.trim() || null
+
     const { error } = await supabase
       .from('news')
       .update({
         status,
-        rejection_reason: status === 'rechazada' ? (reason?.trim() || null) : null,
+        rejection_reason:
+          status === 'rechazada' ? cleanReason : null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
@@ -138,9 +149,47 @@ export default function PanelPage() {
       return
     }
 
+    const notificationTitle =
+      status === 'aprobada'
+        ? 'Noticia aprobada'
+        : 'Noticia rechazada'
+
+    const notificationMessage =
+      status === 'aprobada'
+        ? `Tu noticia "${currentNews.title}" fue aprobada y ya está publicada.`
+        : `Tu noticia "${currentNews.title}" fue rechazada.${
+            cleanReason
+              ? ` Motivo: ${cleanReason}`
+              : ''
+          }`
+
+    const { error: notificationError } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: currentNews.author_id,
+        news_id: currentNews.id,
+        type: status,
+        title: notificationTitle,
+        message: notificationMessage,
+      })
+
+    if (notificationError) {
+      console.error(notificationError)
+      setError(
+        'La noticia se actualizó, pero no se pudo crear la notificación.'
+      )
+    }
+
     setNews((current) =>
       current.map((item) =>
-        item.id === id ? { ...item, status } : item
+        item.id === id
+          ? {
+              ...item,
+              status,
+              rejection_reason:
+                status === 'rechazada' ? cleanReason : null,
+            }
+          : item
       )
     )
 
