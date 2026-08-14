@@ -320,10 +320,20 @@ export default function MisNoticiasPage() {
 
                     {item.status === 'rechazada' && (
                       <div className="mt-4 rounded-lg bg-red-50 border border-red-100 p-4">
-                        <p className="text-sm text-red-700">
-                          Esta noticia fue rechazada. Próximamente podrás
-                          ver el motivo y corregirla para volver a enviarla.
+                        <p className="text-sm text-red-700 mb-3">
+                          Esta noticia fue rechazada. Podés corregirla y
+                          volver a enviarla para revisión.
                         </p>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.push(`/editar-noticia/${item.id}`)
+                          }
+                          className="rounded-lg px-4 py-2 bg-black text-white font-semibold"
+                        >
+                          Editar y corregir
+                        </button>
                       </div>
                     )}
                   </div>
