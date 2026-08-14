@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [logoUrl, setLogoUrl] = useState("/images/brand/logo-mark.svg");
+  const [logoUrl, setLogoUrl] = useState("/logo.png");
   const pathname = usePathname();
   const supabase = createClient();
 
@@ -26,9 +26,7 @@ export default function Header() {
         .eq("id", 1)
         .maybeSingle();
 
-      if (data?.logo_url) {
-        setLogoUrl(data.logo_url);
-      }
+      // Logo local de la Escuela 15
     }
 
     loadSiteSettings();
