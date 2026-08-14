@@ -17,6 +17,7 @@ export default function Header() {
 
   const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     async function loadSiteSettings() {
@@ -60,6 +61,31 @@ export default function Header() {
 
     return () => subscription.unsubscribe();
   }, [supabase]);
+
+  useEffect(() => {
+    async function loadNotifications() {
+      if (!user) {
+        setUnreadNotifications(0);
+        return;
+      }
+
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("read", false);
+
+      if (!error) {
+        setUnreadNotifications(count ?? 0);
+      }
+    }
+
+    loadNotifications();
+
+    const interval = setInterval(loadNotifications, 30000);
+
+    return () => clearInterval(interval);
+  }, [user, supabase]);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -165,6 +191,20 @@ export default function Header() {
                 className="px-3 py-2 text-sm font-semibold"
               >
                 Nueva noticia
+              </Link>
+
+              <Link
+                href="/notificaciones"
+                className="relative px-3 py-2 text-sm font-semibold"
+              >
+                🔔 Notificaciones
+                {unreadNotifications > 0 && (
+                  <span className="ml-1 inline-flex min-w-[20px] h-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-xs font-bold text-white">
+                    {unreadNotifications > 99
+                      ? '99+'
+                      : unreadNotifications}
+                  </span>
+                )}
               </Link>
             </>
           )}
@@ -309,6 +349,23 @@ export default function Header() {
                     className="block rounded-lg px-3 py-2.5 text-base font-semibold text-ink-700 hover:bg-ink-50"
                   >
                     Nueva noticia
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    href="/notificaciones"
+                    className="flex items-center justify-between rounded-lg px-3 py-2.5 text-base font-semibold text-ink-700 hover:bg-ink-50"
+                  >
+                    <span>🔔 Notificaciones</span>
+
+                    {unreadNotifications > 0 && (
+                      <span className="inline-flex min-w-[24px] h-6 items-center justify-center rounded-full bg-red-600 px-2 text-xs font-bold text-white">
+                        {unreadNotifications > 99
+                          ? '99+'
+                          : unreadNotifications}
+                      </span>
+                    )}
                   </Link>
                 </li>
               </>
