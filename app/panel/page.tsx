@@ -584,5 +584,5 @@ export default function PanelPage() {
       </div>
     </main>
   )
-}EOF
+}
 
