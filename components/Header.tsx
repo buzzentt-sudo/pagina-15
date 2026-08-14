@@ -18,24 +18,30 @@ export default function Header() {
 
   useEffect(() => {
     async function loadAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      setUser(user)
 
       if (user) {
-        const { data } = await supabase.rpc("get_my_role");
-        setRole(data);
+        const { data: roleData } = await supabase.rpc("get_my_role")
+        setRole(roleData)
+      } else {
+        setRole(null)
       }
     }
 
-    loadAuth();
+    loadAuth()
 
-    const { data: { subscription } } =
-      supabase.auth.onAuthStateChange((_event, session) => {
-        setUser(session?.user ?? null);
-      });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      loadAuth()
+    })
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => subscription.unsubscribe()
+  }, [])
 
   // Cierra el menú móvil y el buscador cada vez que cambia de página.
   useEffect(() => {
@@ -188,21 +194,56 @@ export default function Header() {
           className="animate-fade-in-up border-t border-ink-100 bg-white px-4 py-3 lg:hidden"
         >
           <ul className="flex flex-col gap-1">
-            {mainNav.map((item) => (
-              <li key={item.href}>
+            {mainNav
+              .filter((item) => item.href !== "/login")
+              .map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`block rounded-lg px-3 py-2.5 text-base font-semibold transition-colors ${
+                      isActive(item.href)
+                        ? "bg-brand-50 text-brand-800"
+                        : "text-ink-700 hover:bg-ink-50"
+                    }`}
+                    aria-current={isActive(item.href) ? "page" : undefined}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+
+            {!user && (
+              <li>
                 <Link
-                  href={item.href}
-                  className={`block rounded-lg px-3 py-2.5 text-base font-semibold transition-colors ${
-                    isActive(item.href)
-                      ? "bg-brand-50 text-brand-800"
-                      : "text-ink-700 hover:bg-ink-50"
-                  }`}
-                  aria-current={isActive(item.href) ? "page" : undefined}
+                  href="/login"
+                  className="block rounded-lg px-3 py-2.5 text-base font-semibold text-ink-700 hover:bg-ink-50"
                 >
-                  {item.label}
+                  Iniciar sesión
                 </Link>
               </li>
-            ))}
+            )}
+
+            {user && role === "admin" && (
+              <li>
+                <Link
+                  href="/panel"
+                  className="block rounded-lg px-3 py-2.5 text-base font-semibold text-ink-700 hover:bg-ink-50"
+                >
+                  Panel de revisión
+                </Link>
+              </li>
+            )}
+
+            {user && (
+              <li>
+                <Link
+                  href="/nueva-noticia"
+                  className="block rounded-lg px-3 py-2.5 text-base font-semibold text-ink-700 hover:bg-ink-50"
+                >
+                  Nueva noticia
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       )}
