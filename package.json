@@ -10,7 +10,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@next/swc-android-arm64": "^13.2.4",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
     "next": "14.2.15",
