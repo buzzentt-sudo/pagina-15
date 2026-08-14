@@ -12,16 +12,34 @@ export default function NewsGrid({
 }: NewsGridProps) {
   if (articles.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-ink-200 bg-ink-50 px-6 py-14 text-center">
-        <p className="text-sm text-ink-500">{emptyMessage}</p>
+      <div className="rounded-2xl border border-dashed border-ink-200 bg-ink-50 px-6 py-16 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-2xl shadow-sm">
+          📰
+        </div>
+
+        <p className="mt-4 text-sm font-medium text-ink-500">
+          {emptyMessage}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 sm:gap-7 lg:grid-cols-3 lg:gap-8">
       {articles.map((article, index) => (
-        <NewsCard key={article.slug} article={article} priority={index === 0} />
+        <div
+          key={article.slug}
+          className="animate-fade-in-up"
+          style={{
+            animationDelay: `${index * 70}ms`,
+            animationFillMode: "both",
+          }}
+        >
+          <NewsCard
+            article={article}
+            priority={index === 0}
+          />
+        </div>
       ))}
     </div>
   );
