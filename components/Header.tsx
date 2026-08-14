@@ -152,12 +152,21 @@ export default function Header() {
           )}
 
           {user && (
-            <Link
-              href="/nueva-noticia"
-              className="px-3 py-2 text-sm font-semibold"
-            >
-              Nueva noticia
-            </Link>
+            <>
+              <Link
+                href="/mis-noticias"
+                className="px-3 py-2 text-sm font-semibold"
+              >
+                Mis noticias
+              </Link>
+
+              <Link
+                href="/nueva-noticia"
+                className="px-3 py-2 text-sm font-semibold"
+              >
+                Nueva noticia
+              </Link>
+            </>
           )}
         </nav>
 
@@ -284,14 +293,25 @@ export default function Header() {
             )}
 
             {user && (
-              <li>
-                <Link
-                  href="/nueva-noticia"
-                  className="block rounded-lg px-3 py-2.5 text-base font-semibold text-ink-700 hover:bg-ink-50"
-                >
-                  Nueva noticia
-                </Link>
-              </li>
+              <>
+                <li>
+                  <Link
+                    href="/mis-noticias"
+                    className="block rounded-lg px-3 py-2.5 text-base font-semibold text-ink-700 hover:bg-ink-50"
+                  >
+                    Mis noticias
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    href="/nueva-noticia"
+                    className="block rounded-lg px-3 py-2.5 text-base font-semibold text-ink-700 hover:bg-ink-50"
+                  >
+                    Nueva noticia
+                  </Link>
+                </li>
+              </>
             )}
           </ul>
         </nav>
