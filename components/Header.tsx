@@ -87,7 +87,7 @@ export default function Header() {
             alt="Escudo de la Escuela N.º 15"
             width={40}
             height={40}
-            className="h-9 w-9 shrink-0 object-contain lg:h-11 lg:w-11"
+            className="h-11 w-11 shrink-0 object-contain sm:h-12 sm:w-12 lg:h-14 lg:w-14"
             priority
             unoptimized={logoUrl.startsWith("http")}
           />
