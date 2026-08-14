@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -24,6 +24,10 @@ export default function PanelPage() {
   const [error, setError] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoLoading, setLogoLoading] = useState(false)
+  const [logoSuccess, setLogoSuccess] = useState('')
+
   useEffect(() => {
     async function loadPanel() {
       const {
@@ -44,16 +48,16 @@ export default function PanelPage() {
         return
       }
 
-      if (roleData !== 'editor' && roleData !== 'admin') {
+      if (roleData !== 'admin') {
         router.push('/')
         return
       }
 
       setAuthorized(true)
+
       const { data, error: newsError } = await supabase
         .from('news')
         .select('*')
-        .eq('status', 'pendiente')
         .order('created_at', { ascending: false })
 
       if (newsError) {
@@ -87,7 +91,9 @@ export default function PanelPage() {
     }
 
     setNews((current) =>
-      current.filter((item) => item.id !== id)
+      current.map((item) =>
+        item.id === id ? { ...item, status } : item
+      )
     )
 
     setActionLoading(null)
@@ -95,12 +101,10 @@ export default function PanelPage() {
 
   async function deleteNews(id: string) {
     const confirmar = window.confirm(
-      '¿Seguro que querés eliminar esta noticia?'
+      '¿Seguro que querés eliminar esta noticia? Esta acción no se puede deshacer.'
     )
 
-    if (!confirmar) {
-      return
-    }
+    if (!confirmar) return
 
     setError('')
     setActionLoading(id)
@@ -122,6 +126,71 @@ export default function PanelPage() {
 
     setActionLoading(null)
   }
+
+  function handleLogoChange(e: ChangeEvent<HTMLInputElement>) {
+    setLogoFile(e.target.files?.[0] ?? null)
+    setLogoSuccess('')
+    setError('')
+  }
+
+  async function uploadLogo() {
+    if (!logoFile) {
+      setError('Seleccioná una imagen para el logo.')
+      return
+    }
+
+    setError('')
+    setLogoSuccess('')
+    setLogoLoading(true)
+
+    try {
+      const extension =
+        logoFile.name.split('.').pop()?.toLowerCase() || 'png'
+
+      const fileName = `logo-${Date.now()}.${extension}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('site-assets')
+        .upload(fileName, logoFile, {
+          upsert: true,
+          contentType: logoFile.type,
+        })
+
+      if (uploadError) {
+        setError('No se pudo subir el logo.')
+        setLogoLoading(false)
+        return
+      }
+
+      const { data } = supabase.storage
+        .from('site-assets')
+        .getPublicUrl(fileName)
+
+      const logoUrl = data.publicUrl
+
+      const { error: settingsError } = await supabase
+        .from('site_settings')
+        .update({
+          logo_url: logoUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', 1)
+
+      if (settingsError) {
+        setError('El logo se subió, pero no se pudo guardar la configuración.')
+        setLogoLoading(false)
+        return
+      }
+
+      setLogoFile(null)
+      setLogoSuccess('¡Logo actualizado correctamente!')
+    } catch {
+      setError('Ocurrió un error inesperado al cambiar el logo.')
+    }
+
+    setLogoLoading(false)
+  }
+
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -138,11 +207,11 @@ export default function PanelPage() {
     <main className="min-h-screen px-4 py-10">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">
-          Panel de revisión
+          Panel de administración
         </h1>
 
         <p className="text-gray-600 mb-8">
-          Noticias pendientes de aprobación
+          Administrá las noticias y la identidad del sitio.
         </p>
 
         {error && (
@@ -151,77 +220,50 @@ export default function PanelPage() {
           </p>
         )}
 
-        {news.length === 0 ? (
-          <div className="border rounded-xl p-8 text-center">
-            <p>No hay noticias pendientes.</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {news.map((item) => (
-              <article
-                key={item.id}
-                className="border rounded-xl p-5"
-              >
-                <img
-                  src={item.image_url}
-                  alt={item.title}
-                  className="w-full max-h-80 object-cover rounded-lg mb-5"
-                />
+        <section className="border rounded-xl p-6 mb-10">
+          <h2 className="text-2xl font-bold mb-2">
+            Cambiar logo
+          </h2>
 
-                <h2 className="text-2xl font-bold mb-2">
-                  {item.title}
-                </h2>
+          <p className="text-gray-600 mb-5">
+            Subí una nueva imagen para reemplazar el logo actual.
+          </p>
 
-                {item.excerpt && (
-                  <p className="text-gray-600 mb-4">
-                    {item.excerpt}
-                  </p>
-                )}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleLogoChange}
+            className="w-full border rounded-lg px-4 py-3 mb-4"
+          />
 
-                <p className="whitespace-pre-wrap">
-                  {item.content}
-                </p>
+          {logoFile && (
+            <p className="text-sm text-gray-600 mb-4">
+              Archivo seleccionado: {logoFile.name}
+            </p>
+          )}
 
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <button
-                    onClick={() =>
-                      updateNewsStatus(item.id, 'aprobada')
-                    }
-                    disabled={actionLoading === item.id}
-                    className="rounded-lg px-4 py-2 bg-green-600 text-white font-semibold disabled:opacity-50"
-                  >
-                    Aprobar
-                  </button>
+          <button
+            type="button"
+            onClick={uploadLogo}
+            disabled={logoLoading || !logoFile}
+            className="rounded-lg px-5 py-3 bg-black text-white font-semibold disabled:opacity-50"
+          >
+  >
+                      Eliminar
+                    </button>
+                  </div>
 
-                  <button
-                    onClick={() =>
-                      updateNewsStatus(item.id, 'rechazada')
-                    }
-                    disabled={actionLoading === item.id}
-                    className="rounded-lg px-4 py-2 bg-red-600 text-white font-semibold disabled:opacity-50"
-                  >
-                    Rechazar
-                  </button>
-
-                  <button
-                    onClick={() => deleteNews(item.id)}
-                    disabled={actionLoading === item.id}
-                    className="rounded-lg px-4 py-2 bg-gray-800 text-white font-semibold disabled:opacity-50"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-
-                {actionLoading === item.id && (
-                  <p className="mt-3 text-sm text-gray-500">
-                    Procesando...
-                  </p>
-                )}
-              </article>
-            ))}
-          </div>
-        )}
+                  {actionLoading === item.id && (
+                    <p className="mt-3 text-sm text-gray-500">
+                      Procesando...
+                    </p>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </main>
   )
-}	
+}

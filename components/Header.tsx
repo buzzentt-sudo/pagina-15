@@ -11,39 +11,58 @@ import { createClient } from "@/lib/supabase/client";
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState("/images/brand/logo-mark.svg");
   const pathname = usePathname();
   const supabase = createClient();
+
   const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadSiteSettings() {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("logo_url")
+        .eq("id", 1)
+        .maybeSingle();
+
+      if (data?.logo_url) {
+        setLogoUrl(data.logo_url);
+      }
+    }
+
+    loadSiteSettings();
+  }, [supabase]);
 
   useEffect(() => {
     async function loadAuth() {
       const {
         data: { user },
-      } = await supabase.auth.getUser()
+      } = await supabase.auth.getUser();
 
-      setUser(user)
+      setUser(user);
 
       if (user) {
-        const { data: roleData } = await supabase.rpc("get_my_role")
-        setRole(roleData)
+        const { data: roleData } =
+          await supabase.rpc("get_my_role");
+
+        setRole(roleData);
       } else {
-        setRole(null)
+        setRole(null);
       }
     }
 
-    loadAuth()
+    loadAuth();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(() => {
-      loadAuth()
-    })
+      loadAuth();
+    });
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
-  // Cierra el menú móvil y el buscador cada vez que cambia de página.
   useEffect(() => {
     setMenuOpen(false);
     setSearchOpen(false);
@@ -56,23 +75,28 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink-100 bg-white/90 backdrop-blur-md">
-      {/* Franja institucional: un detalle de identidad, sutil y prolijo. */}
       <div className="h-[3px] w-full bg-gradient-to-r from-brand-700 via-accent-500 to-brand-700" />
 
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 lg:h-20 lg:px-8">
-        <Link href="/" className="flex min-w-0 shrink-0 items-center gap-2.5 lg:gap-3">
+        <Link
+          href="/"
+          className="flex min-w-0 shrink-0 items-center gap-2.5 lg:gap-3"
+        >
           <Image
-            src="/images/brand/logo-mark.svg"
+            src={logoUrl}
             alt="Escudo de la Escuela N.º 15"
             width={40}
             height={40}
-            className="h-9 w-9 shrink-0 lg:h-11 lg:w-11"
+            className="h-9 w-9 shrink-0 object-contain lg:h-11 lg:w-11"
             priority
+            unoptimized={logoUrl.startsWith("http")}
           />
+
           <span className="flex min-w-0 flex-col leading-tight">
             <span className="truncate font-serif text-base font-bold text-brand-800 lg:text-xl">
               {siteConfig.name}
             </span>
+
             <span className="hidden truncate text-[11px] text-ink-500 sm:block lg:text-xs">
               {siteConfig.tagline}
             </span>
@@ -86,42 +110,54 @@ export default function Header() {
           {mainNav
             .filter((item) => item.href !== "/login")
             .map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`group relative px-3 py-2 text-sm font-semibold transition-colors ${
-                isActive(item.href)
-                  ? "text-brand-800"
-                  : "text-ink-600 hover:text-brand-700"
-              }`}
-              aria-current={isActive(item.href) ? "page" : undefined}
-            >
-              {item.label}
-              <span
-                className={`absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-accent-500 transition-transform duration-200 ${
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`group relative px-3 py-2 text-sm font-semibold transition-colors ${
                   isActive(item.href)
-                    ? "scale-x-100"
-                    : "scale-x-0 group-hover:scale-x-100"
+                    ? "text-brand-800"
+                    : "text-ink-600 hover:text-brand-700"
                 }`}
-                aria-hidden="true"
-              />
-            </Link>
-          ))}
+                aria-current={
+                  isActive(item.href) ? "page" : undefined
+                }
+              >
+                {item.label}
+
+                <span
+                  className={`absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-accent-500 transition-transform duration-200 ${
+                    isActive(item.href)
+                      ? "scale-x-100"
+                      : "scale-x-0 group-hover:scale-x-100"
+                  }`}
+                  aria-hidden="true"
+                />
+              </Link>
+            ))}
 
           {!user && (
-            <Link href="/login" className="px-3 py-2 text-sm font-semibold">
+            <Link
+              href="/login"
+              className="px-3 py-2 text-sm font-semibold"
+            >
               Iniciar sesión
             </Link>
           )}
 
           {user && role === "admin" && (
-            <Link href="/panel" className="px-3 py-2 text-sm font-semibold">
-              Panel de revisión
+            <Link
+              href="/panel"
+              className="px-3 py-2 text-sm font-semibold"
+            >
+              Panel de administración
             </Link>
           )}
 
           {user && (
-            <Link href="/nueva-noticia" className="px-3 py-2 text-sm font-semibold">
+            <Link
+              href="/nueva-noticia"
+              className="px-3 py-2 text-sm font-semibold"
+            >
               Nueva noticia
             </Link>
           )}
@@ -158,7 +194,9 @@ export default function Header() {
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             className="rounded-full p-2.5 text-ink-600 transition-colors hover:bg-ink-50 hover:text-brand-700 lg:hidden"
-            aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-label={
+              menuOpen ? "Cerrar menú" : "Abrir menú"
+            }
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
           >
@@ -172,9 +210,17 @@ export default function Header() {
               aria-hidden="true"
             >
               {menuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18 18 6M6 6l12 12"
+                />
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"
+                />
               )}
             </svg>
           </button>
@@ -183,7 +229,10 @@ export default function Header() {
 
       {searchOpen && (
         <div className="animate-fade-in-up border-t border-ink-100 bg-white px-4 py-3 lg:hidden">
-          <SearchBar autoFocus onSubmitted={() => setSearchOpen(false)} />
+          <SearchBar
+            autoFocus
+            onSubmitted={() => setSearchOpen(false)}
+          />
         </div>
       )}
 
@@ -205,7 +254,9 @@ export default function Header() {
                         ? "bg-brand-50 text-brand-800"
                         : "text-ink-700 hover:bg-ink-50"
                     }`}
-                    aria-current={isActive(item.href) ? "page" : undefined}
+                    aria-current={
+                      isActive(item.href) ? "page" : undefined
+                    }
                   >
                     {item.label}
                   </Link>
@@ -229,7 +280,7 @@ export default function Header() {
                   href="/panel"
                   className="block rounded-lg px-3 py-2.5 text-base font-semibold text-ink-700 hover:bg-ink-50"
                 >
-                  Panel de revisión
+                  Panel de administración
                 </Link>
               </li>
             )}
