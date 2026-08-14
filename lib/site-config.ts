@@ -15,4 +15,5 @@ export const siteConfig = {
 export const mainNav = [
   { label: "Inicio", href: "/" },
   ...categories.map((c) => ({ label: c.name, href: `/categoria/${c.slug}` })),
+  { label: "Iniciar sesión", href: "/login" },
 ];
