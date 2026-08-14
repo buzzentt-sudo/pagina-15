@@ -1,4 +1,3 @@
-cat > app/notificaciones/page.tsx <<'EOF'
 'use client'
 
 import { useEffect, useState } from 'react'
