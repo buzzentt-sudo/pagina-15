@@ -46,7 +46,7 @@ export default function Header() {
         const { data: roleData } =
           await supabase.rpc("get_my_role");
 
-        setRole(roleData);
+        console.log("ROL SUPABASE:", roleData); setRole(roleData);
       } else {
         setRole(null);
       }
