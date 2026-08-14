@@ -75,7 +75,6 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink-100 bg-white/90 backdrop-blur-md">
-      <div className="fixed bottom-2 left-2 z-[9999] bg-black text-white px-3 py-2 text-xs rounded">Usuario: {user ? "SI" : "NO"} | Rol: {role || "ninguno"}</div>
       <div className="h-[3px] w-full bg-gradient-to-r from-brand-700 via-accent-500 to-brand-700" />
 
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 lg:h-20 lg:px-8">
